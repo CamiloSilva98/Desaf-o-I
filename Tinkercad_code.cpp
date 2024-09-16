@@ -35,14 +35,13 @@ void loop()
       delay(10);
       inicio1 = false;
       lcd1.clear();
+      lcd1.print("Leyendo...");
     }
   }
   while(!inicio2)
   {
-    lcd1.clear();
-    lcd1.print("Leyendo onda...");
-	val = analogRead(analogPin);
-    voltage = val * (5.0 / 1023.0);
+    val = analogRead(analogPin);
+    voltage = val * (5.0 / 1023.0) * 2; 
     Serial.println(voltage);
     if (val > maxVoltage)
     {
@@ -53,10 +52,10 @@ void loop()
       minVoltage = voltage;
     }
     Amplitud = (maxVoltage - minVoltage)/2.0;
-    if(minVoltage*-1.0 == maxVoltage)
-    {
-      cuadrada = true;
-    }
+    //if(minVoltage*-1.0 == maxVoltage)
+    //{
+     // cuadrada = true;
+  //  }
     if(digitalRead(botonMostrarPin) == HIGH)
     {
       inicio2 = true;
