@@ -1,6 +1,8 @@
 #include <Adafruit_LiquidCrystal.h>
 Adafruit_LiquidCrystal lcd1(0);
 int val = 0;
+int prevVal = 0;
+int seg = 0;
 bool inicio1 = true;
 bool inicio2 = false;
 bool seno = false;
@@ -13,9 +15,16 @@ float voltage = 0;
 float maxVoltage = 0;
 float minVoltage = 5.0;
 float Amplitud = 0;
+float Hertz = 0;
+
+
 
 void setup()
 {
+  while (!Serial)
+  { 
+    ; // Espera a que se inicie el puerto serie
+  }
   Serial.begin(9600);
   lcd1.begin(16, 2);
   lcd1.setCursor(0, 0);
@@ -35,27 +44,38 @@ void loop()
       delay(10);
       inicio1 = false;
       lcd1.clear();
-      lcd1.print("Leyendo...");
+      lcd1.print("Leyendo onda...");
     }
   }
   while(!inicio2)
   {
-    val = analogRead(analogPin);
-    voltage = val * (5.0 / 1023.0) * 2; 
+	val = analogRead(analogPin);
+    voltage = val * (5.0 / 1023.0) * 2;
     Serial.println(voltage);
-    if (val > maxVoltage)
+    if (voltage > maxVoltage)
     {
-      maxVoltage = val;
+      maxVoltage = voltage;
     }
-    if (val < minVoltage)
+    if (voltage == maxVoltage)
+    {
+      Hertz;
+    }
+    if (voltage < minVoltage)
     {
       minVoltage = voltage;
     }
     Amplitud = (maxVoltage - minVoltage)/2.0;
-    //if(minVoltage*-1.0 == maxVoltage)
-    //{
-     // cuadrada = true;
-  //  }
+    if (abs(voltage)-Amplitud == abs(prevVal)-Amplitud)
+    {  // Cambio brusco
+      cuadrada = true;
+    } else if (abs(voltage - prevVal) < 0.1)
+    {  // Cambio suave
+      seno = true;
+    } else {  // Cambio más constante (ni brusco ni suave)
+      triangulada = true;
+    }
+
+    prevVal = voltage;
     if(digitalRead(botonMostrarPin) == HIGH)
     {
       inicio2 = true;
@@ -69,7 +89,7 @@ void loop()
     {
       lcd1.print("Onda cuadrada. ");
       lcd1.setCursor(0, 1);
-      lcd1.print(maxVoltage);
+      lcd1.print(Amplitud);
       lcd1.print(", ");
       lcd1.print(minVoltage);
     }
@@ -77,16 +97,29 @@ void loop()
     {
       lcd1.print("Onda senoidal. ");
       lcd1.setCursor(0, 1);
-      lcd1.print(maxVoltage);
+      lcd1.print(Amplitud);
     }
     if (!cuadrada && !seno && triangulada)
     {
       lcd1.print("Onda Triangulada. ");
       lcd1.setCursor(0, 1);
-      lcd1.print(maxVoltage);
+      lcd1.print(Amplitud);
     }
-    lcd1.print(Amplitud);
-    delay(10000); //aumentar el tiempo para mostrar todos los datos y dar tiempo a leer
+    if(!cuadrada && !seno && !triangulada)
+    {
+      lcd1.print("No se pudo");
+      lcd1.print("determinar");
+    }
+    delay(1000); //aumentar el tiempo para mostrar todos los datos y dar tiempo a leer
+    lcd1.clear();
+    lcd1.print("Leyendo onda...");
     inicio2 = false;
+    seno = false;
+    cuadrada = false;
+    triangulada = false;
+    maxVoltage = 0;
+    minVoltage = 5.0;
+    Amplitud = 0;
+    prevVal = 0;
   }
 }
